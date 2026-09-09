@@ -1,10 +1,13 @@
 import { Controller, Get } from '@nestjs/common';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Public } from './common/decorators/public.decorator';
 
+@ApiTags('General')
 @Controller()
 export class AppController {
   @Public()
   @Get()
+  @ApiOperation({ summary: 'Health check & service info' })
   getHealth() {
     return {
       status: 'ok',
@@ -15,3 +18,4 @@ export class AppController {
     };
   }
 }
+
