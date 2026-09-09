@@ -1,0 +1,194 @@
+// ============================================================
+//  NFSG Platform – Prisma Schema
+//  DB: Neon PostgreSQL  |  ORM: Prisma
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────────────────────────
+//  Enums
+// ──────────────────────────────────────────────────────────
+
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  STAFF
+}
+
+// ──────────────────────────────────────────────────────────
+//  Admin Users
+// ──────────────────────────────────────────────────────────
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  fullName     String
+  username     String    @unique
+  email        String    @unique
+  passwordHash String
+  role         AdminRole @default(STAFF)
+
+  createdById String?
+  createdBy   AdminUser?  @relation("CreatedByAdmin", fields: [createdById], references: [id])
+  createdUsers AdminUser[] @relation("CreatedByAdmin")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+// ──────────────────────────────────────────────────────────
+//  Farmer Registrations
+// ──────────────────────────────────────────────────────────
+
+model Farmer {
+  id               String             @id @default(cuid())
+  memberId         String             @unique // NFSG/2026/XXXXXX
+  verificationCode String             @unique // short code for status check
+  
+  fullName         String
+  phoneNumber      String
+  email            String?
+  idType           String             // NIN | VIN
+  idNumber         String
+  
+  state            String
+  lga              String
+  ward             String
+  commodity        String
+  farmSize         String
+  groupLeaderName  String?
+
+  status           RegistrationStatus @default(PENDING)
+  adminNote        String?            // note from admin when declining
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  @@index([phoneNumber])
+  @@index([memberId])
+  @@index([verificationCode])
+  @@index([status])
+  @@map("farmers")
+}
+
+// ──────────────────────────────────────────────────────────
+//  Supplier Registrations
+// ──────────────────────────────────────────────────────────
+
+model Supplier {
+  id                      String             @id @default(cuid())
+  supplierId              String             @unique // NFSG-SUP/2026/XXXX
+  verificationCode        String             @unique
+
+  repName                 String
+  phoneNumber             String
+  email                   String
+  nin                     String
+  companyName             String
+  rcNumber                String             @unique
+  regulatoryBody          String
+  regulatoryBodyRegNumber String
+  inputAvailable          String[]           // stored as array
+  fissCertificateUrl      String?            // Cloudflare R2 URL
+  taxNumber               String
+  address                 String
+
+  status                  RegistrationStatus @default(PENDING)
+  adminNote               String?
+
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+
+  @@index([phoneNumber])
+  @@index([rcNumber])
+  @@index([verificationCode])
+  @@index([status])
+  @@map("suppliers")
+}
+
+// ──────────────────────────────────────────────────────────
+//  Distributor Registrations
+// ──────────────────────────────────────────────────────────
+
+model Distributor {
+  id                   String             @id @default(cuid())
+  distributorId        String             @unique // NFSG-DIST/2026/XXXX
+  verificationCode     String             @unique
+
+  name                 String
+  phoneNumber          String
+  email                String
+  storeAddress         String
+  state                String
+  lgaCovered           String
+  companyName          String
+  rcNumber             String             @unique
+  naidaCertificateUrl  String?            // Cloudflare R2 URL
+
+  status               RegistrationStatus @default(PENDING)
+  adminNote            String?
+
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([phoneNumber])
+  @@index([rcNumber])
+  @@index([verificationCode])
+  @@index([status])
+  @@map("distributors")
+}
+
+// ──────────────────────────────────────────────────────────
+//  LGA Coordinator Registrations
+// ──────────────────────────────────────────────────────────
+
+model LgaCoordinator {
+  id                 String             @id @default(cuid())
+  coordinatorId      String             @unique // NFSG-LGA/2026/XXXX
+  verificationCode   String             @unique
+
+  fullName           String
+  phoneNumber        String
+  email              String
+  nin                String
+  appointmentSlipRef String
+  state              String
+  lgaJurisdiction    String
+
+  status             RegistrationStatus @default(PENDING)
+  adminNote          String?
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  @@index([phoneNumber])
+  @@index([verificationCode])
+  @@index([status])
+  @@map("lga_coordinators")
+}
+
+// ──────────────────────────────────────────────────────────
+//  Newsletter Subscriptions
+// ──────────────────────────────────────────────────────────
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("newsletter_subscribers")
+}
