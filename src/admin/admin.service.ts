@@ -81,13 +81,11 @@ export class AdminService {
   ) {
     const where: Record<string, unknown> = {};
     if (filter.status) where.status = filter.status;
-    if (filter.state) where.state = { equals: filter.state, mode: 'insensitive' };
-    if (filter.lga && type === 'farmer') where.lga = { equals: filter.lga, mode: 'insensitive' };
-    if (filter.lga && type === 'distributor') where.lgaCovered = { contains: filter.lga, mode: 'insensitive' };
-    if (filter.lga && type === 'lga-coordinator') where.lgaJurisdiction = { contains: filter.lga, mode: 'insensitive' };
 
     switch (type) {
       case 'farmer': {
+        if (filter.state) where.state = { equals: filter.state, mode: 'insensitive' };
+        if (filter.lga) where.lga = { equals: filter.lga, mode: 'insensitive' };
         if (filter.search) {
           where.OR = [
             { fullName: { contains: filter.search, mode: 'insensitive' } },
@@ -98,6 +96,8 @@ export class AdminService {
         return this.prisma.farmer.findMany({ where, skip, take, orderBy: { createdAt: 'desc' } });
       }
       case 'supplier': {
+        if (filter.state) where.address = { contains: filter.state, mode: 'insensitive' };
+        if (filter.lga) where.address = { contains: filter.lga, mode: 'insensitive' };
         if (filter.search) {
           where.OR = [
             { repName: { contains: filter.search, mode: 'insensitive' } },
@@ -109,6 +109,8 @@ export class AdminService {
         return this.prisma.supplier.findMany({ where, skip, take, orderBy: { createdAt: 'desc' } });
       }
       case 'distributor': {
+        if (filter.state) where.state = { equals: filter.state, mode: 'insensitive' };
+        if (filter.lga) where.lgaCovered = { contains: filter.lga, mode: 'insensitive' };
         if (filter.search) {
           where.OR = [
             { name: { contains: filter.search, mode: 'insensitive' } },
@@ -120,6 +122,8 @@ export class AdminService {
         return this.prisma.distributor.findMany({ where, skip, take, orderBy: { createdAt: 'desc' } });
       }
       case 'lga-coordinator': {
+        if (filter.state) where.state = { equals: filter.state, mode: 'insensitive' };
+        if (filter.lga) where.lgaJurisdiction = { contains: filter.lga, mode: 'insensitive' };
         if (filter.search) {
           where.OR = [
             { fullName: { contains: filter.search, mode: 'insensitive' } },
@@ -135,8 +139,7 @@ export class AdminService {
   // ── Get Single Registration ──────────────────────────────────────────────────
 
   async getRegistration(type: RegistrationType, id: string) {
-    let record: unknown = null;
-
+    let record: any;
     switch (type) {
       case 'farmer':
         record = await this.prisma.farmer.findUnique({ where: { id } });
@@ -153,12 +156,11 @@ export class AdminService {
       default:
         throw new BadRequestException('Invalid registration type');
     }
-
-    if (!record) throw new NotFoundException(`${type} registration not found`);
-    return { ...record as object, _type: type };
+    if (!record) throw new NotFoundException('Registration record not found');
+    return { ...record, _type: type };
   }
 
-  // ── Update Registration Details (Super Admin) ────────────────────────────────
+  // ── Update Registration Details ──────────────────────────────────────────────
 
   async updateRegistration(
     type: RegistrationType,
