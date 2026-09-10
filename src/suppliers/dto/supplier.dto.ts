@@ -1,10 +1,10 @@
 import {
   IsArray,
   IsEmail,
-  IsOptional,
   IsString,
   Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class RegisterSupplierDto {
   @IsString()
@@ -33,6 +33,17 @@ export class RegisterSupplierDto {
   @IsString()
   regulatoryBodyRegNumber: string;
 
+  @Transform(({ value }) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed;
+      } catch {}
+      return value.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+    return [];
+  })
   @IsArray()
   @IsString({ each: true })
   inputAvailable: string[];
@@ -43,3 +54,4 @@ export class RegisterSupplierDto {
   @IsString()
   address: string;
 }
+
