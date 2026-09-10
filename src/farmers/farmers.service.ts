@@ -12,19 +12,16 @@ export class FarmersService {
   ) {}
 
   async register(dto: RegisterFarmerDto) {
-    // Check for duplicate registration (by phone + idNumber combination)
+    // Check for duplicate registration by phone number
     const existing = await this.prisma.farmer.findFirst({
       where: {
-        OR: [
-          { phoneNumber: dto.phoneNumber },
-          { idNumber: dto.idNumber },
-        ],
+        phoneNumber: dto.phoneNumber,
       },
     });
 
     if (existing) {
       throw new BadRequestException(
-        'A registration already exists with this phone number or ID number. ' +
+        'A registration already exists with this phone number. ' +
           'Use your Member ID or verification code to check your status.',
       );
     }
@@ -37,16 +34,20 @@ export class FarmersService {
         memberId,
         verificationCode,
         fullName: dto.fullName,
+        gender: dto.gender ?? null,
+        dateOfBirth: dto.dateOfBirth ?? null,
         phoneNumber: dto.phoneNumber,
-        email: dto.email,
-        idType: dto.idType,
-        idNumber: dto.idNumber,
+        email: dto.email ?? null,
+        idType: dto.idType ?? null,
+        idNumber: dto.idNumber ?? null,
         state: dto.state,
         lga: dto.lga,
         ward: dto.ward,
         commodity: dto.commodity,
         farmSize: dto.farmSize,
-        groupLeaderName: dto.groupLeaderName,
+        groupLeaderName: dto.groupLeaderName ?? null,
+        leaderPhoneNumber: dto.leaderPhoneNumber ?? null,
+        farmersAssociation: dto.farmersAssociation ?? null,
       },
     });
 
@@ -89,10 +90,16 @@ export class FarmersService {
         memberId: true,
         fullName: true,
         phoneNumber: true,
+        gender: true,
+        dateOfBirth: true,
         state: true,
         lga: true,
         ward: true,
         commodity: true,
+        farmSize: true,
+        groupLeaderName: true,
+        leaderPhoneNumber: true,
+        farmersAssociation: true,
         status: true,
         verificationCode: true,
         createdAt: true,
@@ -108,8 +115,14 @@ export class FarmersService {
       memberId: farmer.memberId,
       fullName: farmer.fullName,
       phoneNumber: farmer.phoneNumber,
+      gender: farmer.gender,
+      dateOfBirth: farmer.dateOfBirth,
       location: `${farmer.state} | ${farmer.lga} | ${farmer.ward}`,
       commodity: farmer.commodity,
+      farmSize: farmer.farmSize,
+      groupLeaderName: farmer.groupLeaderName,
+      leaderPhoneNumber: farmer.leaderPhoneNumber,
+      farmersAssociation: farmer.farmersAssociation,
       status: farmer.status,
       registeredAt: farmer.createdAt,
     };

@@ -60,10 +60,12 @@ model Farmer {
   verificationCode String             @unique // short code for status check
   
   fullName         String
+  gender           String?            // MALE | FEMALE | OTHER
+  dateOfBirth      String?            // YYYY-MM-DD
   phoneNumber      String
   email            String?
-  idType           String             // NIN | VIN
-  idNumber         String
+  idType           String?            // NIN | VIN
+  idNumber         String?
   
   state            String
   lga              String
@@ -71,6 +73,8 @@ model Farmer {
   commodity        String
   farmSize         String
   groupLeaderName  String?
+  leaderPhoneNumber String?
+  farmersAssociation String?
 
   status           RegistrationStatus @default(PENDING)
   adminNote        String?            // note from admin when declining

@@ -14,28 +14,60 @@ export class MailService {
   }
 
   private getBaseUrls() {
-    const frontendUrl = (this.config.get('FRONTEND_URL') || 'https://nfsg.org').replace(/\/$/, '');
+    const frontendUrl = (this.config.get('FRONTEND_URL') || 'https://nfsg-frontend.vercel.app').replace(/\/$/, '');
     const adminUrl = (this.config.get('ADMIN_URL') || frontendUrl).replace(/\/$/, '');
     const logoUrl = `${frontendUrl}/logo-transparent.png`;
     return { frontendUrl, adminUrl, logoUrl };
+  }
+
+  private getEmailFooterHtml(): string {
+    const year = new Date().getFullYear();
+    return `
+      <!-- Contact & Footer Section -->
+      <tr>
+        <td style="background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 24px 28px; text-align: center; font-size: 13px; color: #64748b;">
+          <p style="margin: 0 0 10px 0; font-weight: 700; color: #1e293b; font-size: 14px;">Nigerian Farmers Support Group (NFSG)</p>
+          <p style="margin: 0 0 6px 0; line-height: 1.4;">📍 Amb I Osakwe House, Innerblock Street, CBD, Abuja</p>
+          <p style="margin: 0 0 12px 0; line-height: 1.4;">
+            📞 Official Line: <a href="tel:+2348112225723" style="color: #16a34a; font-weight: 600; text-decoration: none;">08112225723</a> &nbsp;|&nbsp; 
+            ✉️ <a href="mailto:Nfsgadmin@gmail.com" style="color: #16a34a; font-weight: 600; text-decoration: none;">Nfsgadmin@gmail.com</a>
+          </p>
+          <div style="margin: 14px 0 10px 0;">
+            <a href="https://www.instagram.com/farmerssupportgroup/" target="_blank" style="display: inline-block; margin: 0 8px; color: #16a34a; font-weight: 600; text-decoration: none; font-size: 12px;">Instagram</a>
+            <span style="color: #cbd5e1;">•</span>
+            <a href="https://www.tiktok.com/@farmerssupportgro" target="_blank" style="display: inline-block; margin: 0 8px; color: #16a34a; font-weight: 600; text-decoration: none; font-size: 12px;">TikTok</a>
+          </div>
+          <p style="margin: 12px 0 0 0; font-size: 11px; color: #94a3b8;">
+            © ${year} Nigerian Farmers Support Group. All rights reserved.
+          </p>
+        </td>
+      </tr>
+    `;
   }
 
   // ─── 1. Farmer Registration ───────────────────────────────────────────────
 
   async sendFarmerRegistrationSuccess(data: {
     email: string;
-    fullName: string;
-    memberId: string;
-    verificationCode: string;
-    state: string;
-    lga: string;
+    fullName?: string;
+    name?: string;
+    memberId?: string;
+    registrationId?: string;
+    verificationCode?: string;
+    state?: string;
+    lga?: string;
+    [key: string]: any;
   }) {
     const { frontendUrl, logoUrl } = this.getBaseUrls();
     const statusUrl = `${frontendUrl}/status`;
+    const fullName = data.fullName || data.name || 'Valued Farmer';
+    const memberId = data.memberId || data.registrationId || 'NFSG-MEMBER';
+    const verificationCode = data.verificationCode || 'NFSG';
+    const location = [data.lga, data.state ? `${data.state} State` : ''].filter(Boolean).join(', ') || 'Nigeria';
 
     await this.sendMail({
       to: data.email,
-      subject: `✅ NFSG Registration Confirmed – ${data.memberId}`,
+      subject: `✅ NFSG Registration Confirmed – ${memberId}`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -53,7 +85,7 @@ export class MailService {
                   <!-- Header -->
                   <tr>
                     <td style="background: linear-gradient(135deg, #15803d, #166534); padding: 36px 24px; text-align: center; color: #ffffff;">
-                      <img src="${logoUrl}" alt="NFSG Logo" width="72" height="72" style="display: block; margin: 0 auto 12px auto; max-width: 72px; height: auto;" />
+                      <img src="${logoUrl}" alt="NFSG Logo" width="80" height="80" style="display: block; margin: 0 auto 12px auto; max-width: 80px; height: auto;" />
                       <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Nigerian Farmers Support Group</h1>
                       <p style="margin: 6px 0 0; font-size: 14px; color: #bbf7d0; font-weight: 500;">Official Farmer Registration Confirmation</p>
                     </td>
@@ -62,80 +94,47 @@ export class MailService {
                   <!-- Content Body -->
                   <tr>
                     <td style="padding: 32px 28px;">
-                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${data.fullName}</strong>,</p>
+                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${fullName}</strong>,</p>
                       <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-                        Your farmer registration for the <strong>Nigerian Farmers Support Group (NFSG)</strong> has been successfully received and is queued for verification.
+                        Welcome to the Nigerian Farmers Support Group. Your registration as a farmer has been successfully received and recorded in our national database.
                       </p>
 
-                      <!-- Registration Summary Card -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; margin: 24px 0; padding: 18px 20px;">
+                      <!-- Credentials Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; margin: 24px 0; padding: 20px;">
                         <tr>
-                          <td colspan="2" style="padding-bottom: 12px; font-size: 15px; font-weight: 700; color: #15803d; border-bottom: 1px dashed #86efac;">
-                            🌾 Registration Details
+                          <td style="padding-bottom: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #166534; letter-spacing: 0.5px;">NFSG Member ID</span>
+                            <div style="font-size: 22px; font-weight: 800; font-family: monospace; color: #15803d; margin-top: 2px;">${memberId}</div>
                           </td>
                         </tr>
                         <tr>
-                          <td style="padding: 10px 0 6px; font-size: 13px; color: #6b7280; width: 40%;">Member ID:</td>
-                          <td style="padding: 10px 0 6px; font-size: 14px; font-weight: 700; font-family: monospace; color: #111827;">${data.memberId}</td>
+                          <td style="border-top: 1px dashed #bbf7d0; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #166534; letter-spacing: 0.5px;">Verification Code</span>
+                            <div style="font-size: 18px; font-weight: 700; font-family: monospace; color: #166534; margin-top: 2px;">${verificationCode}</div>
+                          </td>
                         </tr>
                         <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Full Name:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 600; color: #111827;">${data.fullName}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">State / LGA:</td>
-                          <td style="padding: 6px 0; font-size: 14px; color: #111827;">${data.state} / ${data.lga}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0 2px; font-size: 13px; color: #6b7280;">Status:</td>
-                          <td style="padding: 6px 0 2px;">
-                            <span style="background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px; display: inline-block;">PENDING VERIFICATION</span>
+                          <td style="border-top: 1px dashed #bbf7d0; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #166534; letter-spacing: 0.5px;">Registered Location</span>
+                            <div style="font-size: 14px; font-weight: 600; color: #374151; margin-top: 2px;">${location}</div>
                           </td>
                         </tr>
                       </table>
 
-                      <!-- Verification Code Callout -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; margin: 24px 0; padding: 20px; text-align: center;">
-                        <tr>
-                          <td>
-                            <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px;">Your Status Verification Code</p>
-                            <p style="margin: 0; font-family: 'Courier New', Courier, monospace; font-size: 26px; font-weight: 800; letter-spacing: 4px; color: #1d4ed8;">${data.verificationCode}</p>
-                            <p style="margin: 10px 0 0; font-size: 13px; color: #3b82f6;">
-                              Check your allocation status anytime at <a href="${statusUrl}" style="color: #1d4ed8; font-weight: 600; text-decoration: underline;">${statusUrl}</a>
-                            </p>
-                          </td>
-                        </tr>
-                      </table>
-
-                      <!-- Next Steps -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; margin: 24px 0; padding: 18px 20px;">
-                        <tr>
-                          <td style="font-size: 14px; font-weight: 700; color: #92400e; padding-bottom: 8px;">
-                            📋 Important Next Steps:
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="font-size: 13px; line-height: 1.6; color: #78350f;">
-                            1. Save this email or write down your <strong>Member ID</strong> and <strong>Verification Code</strong>.<br/>
-                            2. Your LGA Coordinator will contact you once distribution commences.<br/>
-                            3. Keep your valid ID (NIN or Voter's Card) ready for verification at the collection center.
-                          </td>
-                        </tr>
-                      </table>
-
-                      <p style="font-size: 13px; line-height: 1.6; color: #6b7280; margin-bottom: 0;">
-                        Need help? Contact NFSG Support at <a href="mailto:support@nfsg.org" style="color: #15803d; text-decoration: underline;">support@nfsg.org</a>
+                      <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">
+                        Please keep your <strong>Member ID</strong> and <strong>Verification Code</strong> safe. You will need them to check your application status, track agricultural input disbursements, and access NFSG support programmes.
                       </p>
+
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="${statusUrl}" style="background: linear-gradient(135deg, #15803d, #16a34a); color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(21, 128, 61, 0.3);">
+                          Check Application Status →
+                        </a>
+                      </div>
                     </td>
                   </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 24px; text-align: center; font-size: 12px; color: #9ca3af;">
-                      <p style="margin: 0 0 4px;">© ${new Date().getFullYear()} Nigerian Farmers Support Group (NFSG). All rights reserved.</p>
-                      <p style="margin: 0;">Empowering sustainable agriculture across Nigeria.</p>
-                    </td>
-                  </tr>
+                  ${this.getEmailFooterHtml()}
 
                 </table>
               </td>
@@ -151,23 +150,35 @@ export class MailService {
 
   async sendSupplierRegistrationSuccess(data: {
     email: string;
-    repName: string;
-    supplierId: string;
-    verificationCode: string;
+    contactPerson?: string;
+    repName?: string;
+    name?: string;
     companyName: string;
+    registrationId?: string;
+    supplierId?: string;
+    verificationCode?: string;
+    category?: string;
+    inputAvailable?: any;
+    state?: string;
+    [key: string]: any;
   }) {
     const { frontendUrl, logoUrl } = this.getBaseUrls();
+    const statusUrl = `${frontendUrl}/status`;
+    const contact = data.contactPerson || data.repName || data.name || 'Partner';
+    const regId = data.registrationId || data.supplierId || 'NFSG-SUPPLIER';
+    const cat = data.category || (Array.isArray(data.inputAvailable) ? data.inputAvailable.join(', ') : data.inputAvailable) || 'Agricultural Inputs';
+    const location = data.state ? `${data.state} State` : 'Nigeria';
 
     await this.sendMail({
       to: data.email,
-      subject: `✅ NFSG Supplier Registration Received – ${data.supplierId}`,
+      subject: `🏢 NFSG Supplier Application Received – ${regId}`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Supplier Registration</title>
+          <title>Supplier Application Received</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 32px 12px;">
@@ -177,63 +188,57 @@ export class MailService {
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #15803d, #166534); padding: 36px 24px; text-align: center; color: #ffffff;">
-                      <img src="${logoUrl}" alt="NFSG Logo" width="72" height="72" style="display: block; margin: 0 auto 12px auto; max-width: 72px; height: auto;" />
-                      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">Nigerian Farmers Support Group</h1>
-                      <p style="margin: 6px 0 0; font-size: 14px; color: #bbf7d0;">Supplier Application Confirmation</p>
+                    <td style="background: linear-gradient(135deg, #0f766e, #115e59); padding: 36px 24px; text-align: center; color: #ffffff;">
+                      <img src="${logoUrl}" alt="NFSG Logo" width="80" height="80" style="display: block; margin: 0 auto 12px auto; max-width: 80px; height: auto;" />
+                      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Nigerian Farmers Support Group</h1>
+                      <p style="margin: 6px 0 0; font-size: 14px; color: #99f6e4; font-weight: 500;">Supplier & Vendor Registration Confirmation</p>
                     </td>
                   </tr>
 
-                  <!-- Body -->
+                  <!-- Content Body -->
                   <tr>
                     <td style="padding: 32px 28px;">
-                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${data.repName}</strong>,</p>
+                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${contact}</strong>,</p>
                       <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-                        Your supplier onboarding application on behalf of <strong>${data.companyName}</strong> has been received and is currently under compliance review.
+                        Thank you for applying to partner with NFSG. The supplier application for <strong>${data.companyName}</strong> has been received and queued for review.
                       </p>
 
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; margin: 24px 0; padding: 18px 20px;">
+                      <!-- Details Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdfa; border: 1.5px solid #5eead4; border-radius: 12px; margin: 24px 0; padding: 20px;">
                         <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280; width: 40%;">Supplier ID:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 700; font-family: monospace;">${data.supplierId}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Company Name:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 600;">${data.companyName}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Representative:</td>
-                          <td style="padding: 6px 0; font-size: 14px;">${data.repName}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Status:</td>
-                          <td style="padding: 6px 0;">
-                            <span style="background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">UNDER REVIEW</span>
+                          <td style="padding-bottom: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #115e59; letter-spacing: 0.5px;">Registration Reference ID</span>
+                            <div style="font-size: 22px; font-weight: 800; font-family: monospace; color: #0f766e; margin-top: 2px;">${regId}</div>
                           </td>
                         </tr>
-                      </table>
-
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; margin: 24px 0; padding: 20px; text-align: center;">
                         <tr>
-                          <td>
-                            <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #1e40af;">YOUR VERIFICATION CODE</p>
-                            <p style="margin: 0; font-family: monospace; font-size: 26px; font-weight: 800; letter-spacing: 4px; color: #1d4ed8;">${data.verificationCode}</p>
+                          <td style="border-top: 1px dashed #99f6e4; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #115e59; letter-spacing: 0.5px;">Supply Category</span>
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 2px;">${cat}</div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="border-top: 1px dashed #99f6e4; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #115e59; letter-spacing: 0.5px;">Operating Location</span>
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 2px;">${location}</div>
                           </td>
                         </tr>
                       </table>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">
-                        Our compliance team will review your FISS certificate and regulatory documentation. You will receive an email update once verification is complete.
+                        Our procurement and verification team will review your submitted CAC and business documentation. You will receive an email once the review is completed.
                       </p>
+
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="${statusUrl}" style="background: linear-gradient(135deg, #0f766e, #0d9488); color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(15, 118, 110, 0.3);">
+                          Track Application Status →
+                        </a>
+                      </div>
                     </td>
                   </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 24px; text-align: center; font-size: 12px; color: #9ca3af;">
-                      © ${new Date().getFullYear()} Nigerian Farmers Support Group (NFSG). All rights reserved.
-                    </td>
-                  </tr>
+                  ${this.getEmailFooterHtml()}
 
                 </table>
               </td>
@@ -245,29 +250,40 @@ export class MailService {
     });
   }
 
-  // ─── 3. Distributor Registration ───────────────────────────────────────────
+  // ─── 3. Distributor Registration ──────────────────────────────────────────
 
   async sendDistributorRegistrationSuccess(data: {
     email: string;
-    name: string;
-    distributorId: string;
-    verificationCode: string;
-    companyName: string;
-    state: string;
-    lgaCovered: string;
+    contactPerson?: string;
+    name?: string;
+    hubName?: string;
+    companyName?: string;
+    registrationId?: string;
+    distributorId?: string;
+    verificationCode?: string;
+    distributionCapacity?: string;
+    state?: string;
+    lgaCovered?: string;
+    [key: string]: any;
   }) {
-    const { logoUrl } = this.getBaseUrls();
+    const { frontendUrl, logoUrl } = this.getBaseUrls();
+    const statusUrl = `${frontendUrl}/status`;
+    const contact = data.contactPerson || data.name || 'Partner';
+    const hub = data.hubName || data.companyName || 'Distribution Hub';
+    const regId = data.registrationId || data.distributorId || 'NFSG-DIST';
+    const capacity = data.distributionCapacity || 'Regional Distribution';
+    const location = [data.lgaCovered, data.state ? `${data.state} State` : ''].filter(Boolean).join(', ') || 'Nigeria';
 
     await this.sendMail({
       to: data.email,
-      subject: `✅ NFSG Distributor Application Received – ${data.distributorId}`,
+      subject: `🚚 NFSG Distributor Application Received – ${regId}`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Distributor Registration</title>
+          <title>Distributor Application Received</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 32px 12px;">
@@ -277,63 +293,57 @@ export class MailService {
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #15803d, #166534); padding: 36px 24px; text-align: center; color: #ffffff;">
-                      <img src="${logoUrl}" alt="NFSG Logo" width="72" height="72" style="display: block; margin: 0 auto 12px auto; max-width: 72px; height: auto;" />
-                      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">Nigerian Farmers Support Group</h1>
-                      <p style="margin: 6px 0 0; font-size: 14px; color: #bbf7d0;">Distributor Application Confirmation</p>
+                    <td style="background: linear-gradient(135deg, #1e40af, #1d4ed8); padding: 36px 24px; text-align: center; color: #ffffff;">
+                      <img src="${logoUrl}" alt="NFSG Logo" width="80" height="80" style="display: block; margin: 0 auto 12px auto; max-width: 80px; height: auto;" />
+                      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Nigerian Farmers Support Group</h1>
+                      <p style="margin: 6px 0 0; font-size: 14px; color: #bfdbfe; font-weight: 500;">Distribution Hub Application Confirmation</p>
                     </td>
                   </tr>
 
-                  <!-- Body -->
+                  <!-- Content Body -->
                   <tr>
                     <td style="padding: 32px 28px;">
-                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${data.name}</strong>,</p>
+                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${contact}</strong>,</p>
                       <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-                        Your registration for <strong>${data.companyName}</strong> as an authorized input distributor has been received.
+                        Thank you for applying to be an authorized NFSG distribution partner for <strong>${hub}</strong>.
                       </p>
 
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; margin: 24px 0; padding: 18px 20px;">
+                      <!-- Details Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; margin: 24px 0; padding: 20px;">
                         <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280; width: 40%;">Distributor ID:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 700; font-family: monospace;">${data.distributorId}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Company Name:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 600;">${data.companyName}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Coverage Area:</td>
-                          <td style="padding: 6px 0; font-size: 14px;">${data.state} (${data.lgaCovered})</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Status:</td>
-                          <td style="padding: 6px 0;">
-                            <span style="background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">UNDER REVIEW</span>
+                          <td style="padding-bottom: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #1e40af; letter-spacing: 0.5px;">Registration Reference ID</span>
+                            <div style="font-size: 22px; font-weight: 800; font-family: monospace; color: #1d4ed8; margin-top: 2px;">${regId}</div>
                           </td>
                         </tr>
-                      </table>
-
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; margin: 24px 0; padding: 20px; text-align: center;">
                         <tr>
-                          <td>
-                            <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #1e40af;">YOUR VERIFICATION CODE</p>
-                            <p style="margin: 0; font-family: monospace; font-size: 26px; font-weight: 800; letter-spacing: 4px; color: #1d4ed8;">${data.verificationCode}</p>
+                          <td style="border-top: 1px dashed #bfdbfe; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #1e40af; letter-spacing: 0.5px;">Distribution Capacity</span>
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 2px;">${capacity}</div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td style="border-top: 1px dashed #bfdbfe; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #1e40af; letter-spacing: 0.5px;">Coverage Location</span>
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 2px;">${location}</div>
                           </td>
                         </tr>
                       </table>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">
-                        Our logistics & compliance team will verify your NAIDA certificate and reach out with network partnership details.
+                        Our logistics and network team will evaluate your warehouse capacity and logistics infrastructure. We will notify you once verified.
                       </p>
+
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="${statusUrl}" style="background: linear-gradient(135deg, #1e40af, #2563eb); color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.3);">
+                          Track Application Status →
+                        </a>
+                      </div>
                     </td>
                   </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 24px; text-align: center; font-size: 12px; color: #9ca3af;">
-                      © ${new Date().getFullYear()} Nigerian Farmers Support Group (NFSG). All rights reserved.
-                    </td>
-                  </tr>
+                  ${this.getEmailFooterHtml()}
 
                 </table>
               </td>
@@ -345,28 +355,37 @@ export class MailService {
     });
   }
 
-  // ─── 4. LGA Coordinator Registration ──────────────────────────────────────
+  // ─── 4. LGA Coordinator Registration ─────────────────────────────────────
 
   async sendLgaCoordinatorRegistrationSuccess(data: {
     email: string;
-    fullName: string;
-    coordinatorId: string;
-    verificationCode: string;
-    state: string;
-    lgaJurisdiction: string;
+    fullName?: string;
+    name?: string;
+    registrationId?: string;
+    coordinatorId?: string;
+    verificationCode?: string;
+    state?: string;
+    lga?: string;
+    lgaJurisdiction?: string;
+    [key: string]: any;
   }) {
-    const { logoUrl } = this.getBaseUrls();
+    const { frontendUrl, logoUrl } = this.getBaseUrls();
+    const statusUrl = `${frontendUrl}/status`;
+    const fullName = data.fullName || data.name || 'Coordinator';
+    const regId = data.registrationId || data.coordinatorId || 'NFSG-LGA';
+    const lga = data.lga || data.lgaJurisdiction || '';
+    const location = [lga ? `${lga} LGA` : '', data.state ? `${data.state} State` : ''].filter(Boolean).join(', ') || 'Nigeria';
 
     await this.sendMail({
       to: data.email,
-      subject: `✅ NFSG LGA Coordinator Profile Submitted – ${data.coordinatorId}`,
+      subject: `🌾 NFSG LGA Coordinator Application Received – ${regId}`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>LGA Coordinator Registration</title>
+          <title>LGA Coordinator Application Received</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 32px 12px;">
@@ -376,59 +395,51 @@ export class MailService {
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #15803d, #166534); padding: 36px 24px; text-align: center; color: #ffffff;">
-                      <img src="${logoUrl}" alt="NFSG Logo" width="72" height="72" style="display: block; margin: 0 auto 12px auto; max-width: 72px; height: auto;" />
-                      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">Nigerian Farmers Support Group</h1>
-                      <p style="margin: 6px 0 0; font-size: 14px; color: #bbf7d0;">LGA Coordinator Profile Submitted</p>
+                    <td style="background: linear-gradient(135deg, #ca8a04, #a16207); padding: 36px 24px; text-align: center; color: #ffffff;">
+                      <img src="${logoUrl}" alt="NFSG Logo" width="80" height="80" style="display: block; margin: 0 auto 12px auto; max-width: 80px; height: auto;" />
+                      <h1 style="margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">Nigerian Farmers Support Group</h1>
+                      <p style="margin: 6px 0 0; font-size: 14px; color: #fef08a; font-weight: 500;">LGA Coordinator Application Confirmation</p>
                     </td>
                   </tr>
 
-                  <!-- Body -->
+                  <!-- Content Body -->
                   <tr>
                     <td style="padding: 32px 28px;">
-                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${data.fullName}</strong>,</p>
+                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${fullName}</strong>,</p>
                       <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-                        Your profile submission as LGA Coordinator has been received and forwarded to State Operations for appointment review.
+                        Thank you for your willingness to lead and serve as an NFSG LGA Coordinator for <strong>${location}</strong>.
                       </p>
 
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; margin: 24px 0; padding: 18px 20px;">
+                      <!-- Details Box -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fefce8; border: 1.5px solid #fde047; border-radius: 12px; margin: 24px 0; padding: 20px;">
                         <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280; width: 40%;">Coordinator ID:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 700; font-family: monospace;">${data.coordinatorId}</td>
+                          <td style="padding-bottom: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #854d0e; letter-spacing: 0.5px;">Application Reference ID</span>
+                            <div style="font-size: 22px; font-weight: 800; font-family: monospace; color: #a16207; margin-top: 2px;">${regId}</div>
+                          </td>
                         </tr>
                         <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Full Name:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 600;">${data.fullName}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Jurisdiction:</td>
-                          <td style="padding: 6px 0; font-size: 14px;">${data.state} (${data.lgaJurisdiction})</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Status:</td>
-                          <td style="padding: 6px 0;">
-                            <span style="background-color: #fef3c7; color: #92400e; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 9999px;">PENDING APPROVAL</span>
+                          <td style="border-top: 1px dashed #fef08a; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #854d0e; letter-spacing: 0.5px;">Assigned Area</span>
+                            <div style="font-size: 14px; font-weight: 600; color: #1f2937; margin-top: 2px;">${location}</div>
                           </td>
                         </tr>
                       </table>
 
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; margin: 24px 0; padding: 20px; text-align: center;">
-                        <tr>
-                          <td>
-                            <p style="margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #1e40af;">YOUR VERIFICATION CODE</p>
-                            <p style="margin: 0; font-family: monospace; font-size: 26px; font-weight: 800; letter-spacing: 4px; color: #1d4ed8;">${data.verificationCode}</p>
-                          </td>
-                        </tr>
-                      </table>
+                      <p style="font-size: 14px; line-line: 1.6; color: #4b5563;">
+                        The NFSG Executive Council is reviewing all LGA leadership nominations. Successful coordinators will undergo orientation and receive field oversight kits.
+                      </p>
+
+                      <!-- CTA Button -->
+                      <div style="text-align: center; margin: 28px 0;">
+                        <a href="${statusUrl}" style="background: linear-gradient(135deg, #ca8a04, #d97706); color: #ffffff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 15px; display: inline-block; box-shadow: 0 4px 12px rgba(202, 138, 4, 0.3);">
+                          Check Nomination Status →
+                        </a>
+                      </div>
                     </td>
                   </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 24px; text-align: center; font-size: 12px; color: #9ca3af;">
-                      © ${new Date().getFullYear()} Nigerian Farmers Support Group (NFSG). All rights reserved.
-                    </td>
-                  </tr>
+                  ${this.getEmailFooterHtml()}
 
                 </table>
               </td>
@@ -440,27 +451,32 @@ export class MailService {
     });
   }
 
-  // ─── 5. Admin Welcome Email ───────────────────────────────────────────────
+  // ─── 5. Admin User Invitation / Welcome ────────────────────────────────────
 
   async sendAdminWelcome(data: {
     email: string;
-    fullName: string;
-    username: string;
-    password: string;
+    fullName?: string;
+    username?: string;
+    name?: string;
+    temporaryPassword?: string;
+    password?: string;
     role: string;
+    [key: string]: any;
   }) {
     const { adminUrl, logoUrl } = this.getBaseUrls();
+    const fullName = data.fullName || data.username || data.name || 'Admin';
+    const tempPassword = data.temporaryPassword || data.password;
 
     await this.sendMail({
       to: data.email,
-      subject: '🔐 NFSG Admin Access – Your Account Credentials',
+      subject: `🛡️ You have been added to the NFSG Admin Portal`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Admin Account Created</title>
+          <title>Admin Portal Access</title>
         </head>
         <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1f2937;">
           <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 32px 12px;">
@@ -470,44 +486,43 @@ export class MailService {
                   
                   <!-- Header -->
                   <tr>
-                    <td style="background: linear-gradient(135deg, #1e3a8a, #1e40af); padding: 36px 24px; text-align: center; color: #ffffff;">
-                      <img src="${logoUrl}" alt="NFSG Logo" width="72" height="72" style="display: block; margin: 0 auto 12px auto; max-width: 72px; height: auto;" />
-                      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">NFSG Admin Portal</h1>
-                      <p style="margin: 6px 0 0; font-size: 14px; color: #bfdbfe;">Administrative Account Created</p>
+                    <td style="background: linear-gradient(135deg, #1e293b, #0f172a); padding: 36px 24px; text-align: center; color: #ffffff;">
+                      <img src="${logoUrl}" alt="NFSG Logo" width="80" height="80" style="display: block; margin: 0 auto 12px auto; max-width: 80px; height: auto;" />
+                      <h1 style="margin: 0; font-size: 22px; font-weight: 800;">NFSG Management Portal</h1>
+                      <p style="margin: 6px 0 0; font-size: 14px; color: #94a3b8;">Staff & Executive Access</p>
                     </td>
                   </tr>
 
-                  <!-- Body -->
+                  <!-- Content Body -->
                   <tr>
                     <td style="padding: 32px 28px;">
-                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Hello <strong>${data.fullName}</strong>,</p>
+                      <p style="font-size: 16px; line-height: 1.6; margin-top: 0;">Dear <strong>${fullName}</strong>,</p>
                       <p style="font-size: 15px; line-height: 1.6; color: #4b5563;">
-                        An administrator account has been created for you with the role of <strong style="color: #1e40af;">${data.role.replace('_', ' ')}</strong> on the NFSG Management Portal.
+                        An administrative account has been provisioned for you on the NFSG Management Console.
                       </p>
 
-                      <!-- Credentials Box -->
-                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; margin: 24px 0; padding: 20px;">
+                      <!-- Credentials -->
+                      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; margin: 24px 0; padding: 20px;">
                         <tr>
-                          <td colspan="2" style="padding-bottom: 12px; font-size: 14px; font-weight: 700; color: #1e40af; border-bottom: 1px dashed #93c5fd;">
-                            🔑 Login Credentials
+                          <td style="padding-bottom: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Login Email</span>
+                            <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-top: 2px;">${data.email}</div>
                           </td>
                         </tr>
+                        ${tempPassword ? `
                         <tr>
-                          <td style="padding: 10px 0 6px; font-size: 13px; color: #6b7280; width: 35%;">Email:</td>
-                          <td style="padding: 10px 0 6px; font-size: 14px; font-weight: 600; font-family: monospace; color: #111827;">${data.email}</td>
+                          <td style="border-top: 1px dashed #e2e8f0; padding-top: 12px; padding-bottom: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Temporary Password</span>
+                            <div style="font-size: 18px; font-weight: 800; font-family: monospace; color: #0f172a; margin-top: 2px;">${tempPassword}</div>
+                          </td>
                         </tr>
+                        ` : ''}
                         <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Username:</td>
-                          <td style="padding: 6px 0; font-size: 14px; font-weight: 600; font-family: monospace; color: #111827;">${data.username}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0; font-size: 13px; color: #6b7280;">Temporary Password:</td>
-                          <td style="padding: 6px 0; font-size: 15px; font-weight: 700; font-family: monospace; color: #dc2626;">${data.password}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 6px 0 2px; font-size: 13px; color: #6b7280;">Assigned Role:</td>
-                          <td style="padding: 6px 0 2px;">
-                            <span style="background-color: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">${data.role}</span>
+                          <td style="border-top: 1px dashed #e2e8f0; padding-top: 12px;">
+                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #64748b;">Assigned Role</span>
+                            <div style="margin-top: 4px;">
+                              <span style="background-color: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 4px;">${data.role}</span>
+                            </div>
                           </td>
                         </tr>
                       </table>
@@ -530,12 +545,7 @@ export class MailService {
                     </td>
                   </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 24px; text-align: center; font-size: 12px; color: #9ca3af;">
-                      © ${new Date().getFullYear()} Nigerian Farmers Support Group (NFSG). All rights reserved.
-                    </td>
-                  </tr>
+                  ${this.getEmailFooterHtml()}
 
                 </table>
               </td>
@@ -556,6 +566,7 @@ export class MailService {
     registrationType: string;
     status: 'APPROVED' | 'DECLINED';
     note?: string;
+    [key: string]: any;
   }) {
     const isApproved = data.status === 'APPROVED';
     const { logoUrl } = this.getBaseUrls();
@@ -580,7 +591,7 @@ export class MailService {
                   <!-- Header -->
                   <tr>
                     <td style="background: ${isApproved ? 'linear-gradient(135deg, #15803d, #166534)' : 'linear-gradient(135deg, #b91c1c, #991b1b)'}; padding: 36px 24px; text-align: center; color: #ffffff;">
-                      <img src="${logoUrl}" alt="NFSG Logo" width="72" height="72" style="display: block; margin: 0 auto 12px auto; max-width: 72px; height: auto;" />
+                      <img src="${logoUrl}" alt="NFSG Logo" width="80" height="80" style="display: block; margin: 0 auto 12px auto; max-width: 80px; height: auto;" />
                       <h1 style="margin: 0; font-size: 22px; font-weight: 800;">
                         ${isApproved ? '✅ Application Approved' : '❌ Application Declined'}
                       </h1>
@@ -623,18 +634,13 @@ export class MailService {
                       </table>
                       ` : `
                       <p style="font-size: 14px; line-height: 1.6; color: #4b5563;">
-                        If you believe this decision was made in error or wish to submit updated documentation, please contact our support team at <a href="mailto:support@nfsg.org" style="color: #dc2626; text-decoration: underline;">support@nfsg.org</a>.
+                        If you believe this decision was made in error or wish to submit updated documentation, please contact our support team at <a href="mailto:Nfsgadmin@gmail.com" style="color: #dc2626; text-decoration: underline;">Nfsgadmin@gmail.com</a>.
                       </p>
                       `}
                     </td>
                   </tr>
 
-                  <!-- Footer -->
-                  <tr>
-                    <td style="background-color: #f9fafb; border-top: 1px solid #e5e7eb; padding: 20px 24px; text-align: center; font-size: 12px; color: #9ca3af;">
-                      © ${new Date().getFullYear()} Nigerian Farmers Support Group (NFSG). All rights reserved.
-                    </td>
-                  </tr>
+                  ${this.getEmailFooterHtml()}
 
                 </table>
               </td>

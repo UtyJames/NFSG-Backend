@@ -37,6 +37,16 @@ export class AdminController {
     return this.adminService.getRegistration(type, id);
   }
 
+  @Patch('registrations/:type/:id')
+  @ApiOperation({ summary: 'Update registration details (Super Admin)' })
+  updateRegistration(
+    @Param('type') type: 'farmer' | 'supplier' | 'distributor' | 'lga-coordinator',
+    @Param('id') id: string,
+    @Body() body: Record<string, any>,
+  ) {
+    return this.adminService.updateRegistration(type, id, body);
+  }
+
   @Patch('registrations/:type/:id/status')
   @ApiOperation({ summary: 'Update registration status (approve, reject, flag)' })
   updateStatus(
@@ -47,4 +57,3 @@ export class AdminController {
     return this.adminService.updateStatus(type, id, body);
   }
 }
-

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { MailService } from '../mail/mail.service';
 import { RegistrationsFilterDto, UpdateStatusDto } from './dto/admin.dto';
@@ -13,7 +17,7 @@ export class AdminService {
     private mail: MailService,
   ) {}
 
-  // ─── Dashboard Metrics ──────────────────────────────────────────────────────
+  // ── Dashboard Metrics ────────────────────────────────────────────────────────
 
   async getDashboardStats() {
     const [farmers, suppliers, distributors, lgaCoordinators] = await Promise.all([
@@ -38,7 +42,7 @@ export class AdminService {
     };
   }
 
-  // ─── List All Registrations (paginated + filtered) ──────────────────────────
+  // ── List All Registrations (paginated + filtered) ─────────────────────────────
 
   async listRegistrations(filter: RegistrationsFilterDto) {
     const page = filter.page ?? 1;
@@ -78,6 +82,9 @@ export class AdminService {
     const where: Record<string, unknown> = {};
     if (filter.status) where.status = filter.status;
     if (filter.state) where.state = { equals: filter.state, mode: 'insensitive' };
+    if (filter.lga && type === 'farmer') where.lga = { equals: filter.lga, mode: 'insensitive' };
+    if (filter.lga && type === 'distributor') where.lgaCovered = { contains: filter.lga, mode: 'insensitive' };
+    if (filter.lga && type === 'lga-coordinator') where.lgaJurisdiction = { contains: filter.lga, mode: 'insensitive' };
 
     switch (type) {
       case 'farmer': {
@@ -125,7 +132,7 @@ export class AdminService {
     }
   }
 
-  // ─── Get Single Registration ─────────────────────────────────────────────
+  // ── Get Single Registration ──────────────────────────────────────────────────
 
   async getRegistration(type: RegistrationType, id: string) {
     let record: unknown = null;
@@ -151,7 +158,148 @@ export class AdminService {
     return { ...record as object, _type: type };
   }
 
-  // ─── Update Registration Status ──────────────────────────────────────────
+  // ── Update Registration Details (Super Admin) ────────────────────────────────
+
+  async updateRegistration(
+    type: RegistrationType,
+    id: string,
+    data: Record<string, any>,
+  ) {
+    let updated: any;
+    switch (type) {
+      case 'farmer': {
+        const {
+          fullName,
+          gender,
+          dateOfBirth,
+          phoneNumber,
+          email,
+          idType,
+          idNumber,
+          state,
+          lga,
+          ward,
+          commodity,
+          farmSize,
+          groupLeaderName,
+          leaderPhoneNumber,
+          farmersAssociation,
+        } = data;
+
+        updated = await this.prisma.farmer.update({
+          where: { id },
+          data: {
+            ...(fullName !== undefined ? { fullName } : {}),
+            ...(gender !== undefined ? { gender } : {}),
+            ...(dateOfBirth !== undefined ? { dateOfBirth } : {}),
+            ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+            ...(email !== undefined ? { email } : {}),
+            ...(idType !== undefined ? { idType } : {}),
+            ...(idNumber !== undefined ? { idNumber } : {}),
+            ...(state !== undefined ? { state } : {}),
+            ...(lga !== undefined ? { lga } : {}),
+            ...(ward !== undefined ? { ward } : {}),
+            ...(commodity !== undefined ? { commodity } : {}),
+            ...(farmSize !== undefined ? { farmSize } : {}),
+            ...(groupLeaderName !== undefined ? { groupLeaderName } : {}),
+            ...(leaderPhoneNumber !== undefined ? { leaderPhoneNumber } : {}),
+            ...(farmersAssociation !== undefined ? { farmersAssociation } : {}),
+          },
+        });
+        break;
+      }
+      case 'supplier': {
+        const {
+          repName,
+          phoneNumber,
+          email,
+          nin,
+          companyName,
+          rcNumber,
+          regulatoryBody,
+          regulatoryBodyRegNumber,
+          inputAvailable,
+          taxNumber,
+          address,
+        } = data;
+
+        updated = await this.prisma.supplier.update({
+          where: { id },
+          data: {
+            ...(repName !== undefined ? { repName } : {}),
+            ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+            ...(email !== undefined ? { email } : {}),
+            ...(nin !== undefined ? { nin } : {}),
+            ...(companyName !== undefined ? { companyName } : {}),
+            ...(rcNumber !== undefined ? { rcNumber } : {}),
+            ...(regulatoryBody !== undefined ? { regulatoryBody } : {}),
+            ...(regulatoryBodyRegNumber !== undefined ? { regulatoryBodyRegNumber } : {}),
+            ...(inputAvailable !== undefined ? { inputAvailable } : {}),
+            ...(taxNumber !== undefined ? { taxNumber } : {}),
+            ...(address !== undefined ? { address } : {}),
+          },
+        });
+        break;
+      }
+      case 'distributor': {
+        const {
+          name,
+          phoneNumber,
+          email,
+          storeAddress,
+          state,
+          lgaCovered,
+          companyName,
+          rcNumber,
+        } = data;
+
+        updated = await this.prisma.distributor.update({
+          where: { id },
+          data: {
+            ...(name !== undefined ? { name } : {}),
+            ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+            ...(email !== undefined ? { email } : {}),
+            ...(storeAddress !== undefined ? { storeAddress } : {}),
+            ...(state !== undefined ? { state } : {}),
+            ...(lgaCovered !== undefined ? { lgaCovered } : {}),
+            ...(companyName !== undefined ? { companyName } : {}),
+            ...(rcNumber !== undefined ? { rcNumber } : {}),
+          },
+        });
+        break;
+      }
+      case 'lga-coordinator': {
+        const {
+          fullName,
+          phoneNumber,
+          email,
+          nin,
+          appointmentSlipRef,
+          state,
+          lgaJurisdiction,
+        } = data;
+
+        updated = await this.prisma.lgaCoordinator.update({
+          where: { id },
+          data: {
+            ...(fullName !== undefined ? { fullName } : {}),
+            ...(phoneNumber !== undefined ? { phoneNumber } : {}),
+            ...(email !== undefined ? { email } : {}),
+            ...(nin !== undefined ? { nin } : {}),
+            ...(appointmentSlipRef !== undefined ? { appointmentSlipRef } : {}),
+            ...(state !== undefined ? { state } : {}),
+            ...(lgaJurisdiction !== undefined ? { lgaJurisdiction } : {}),
+          },
+        });
+        break;
+      }
+      default:
+        throw new BadRequestException('Invalid registration type');
+    }
+    return { ...updated, _type: type };
+  }
+
+  // ── Update Registration Status ───────────────────────────────────────────────
 
   async updateStatus(type: RegistrationType, id: string, dto: UpdateStatusDto) {
     const updateData = { status: dto.status, adminNote: dto.note ?? null };

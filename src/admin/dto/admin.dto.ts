@@ -27,6 +27,10 @@ export class RegistrationsFilterDto {
   state?: string;
 
   @IsOptional()
+  @IsString()
+  lga?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)

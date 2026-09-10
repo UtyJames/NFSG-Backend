@@ -8,6 +8,7 @@ export class PublicService {
   // ─── Homepage Metrics ────────────────────────────────────────────────────
 
   async getHomepageMetrics() {
+    const BASE_FARMERS_COUNT = 6238000;
     const [
       farmersRegistered,
       farmersApproved,
@@ -21,7 +22,7 @@ export class PublicService {
     ]);
 
     return {
-      farmersRegistered,
+      farmersRegistered: BASE_FARMERS_COUNT + farmersRegistered,
       farmersApproved,
       verifiedDealersLGA: distributorsApproved,
       verifiedSuppliers: suppliersApproved,
