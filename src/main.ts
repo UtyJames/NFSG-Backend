@@ -18,7 +18,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Global validation pipe
+  // Global validation pipe — updated 2026-09-11 to allow optional farmer/supplier/distributor fields
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
