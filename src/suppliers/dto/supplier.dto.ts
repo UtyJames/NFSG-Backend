@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsOptional,
   IsEmail,
   IsString,
   Matches,
@@ -53,5 +54,13 @@ export class RegisterSupplierDto {
 
   @IsString()
   address: string;
+
+  @IsOptional()
+  @IsString()
+  fissCertificatePhotoKey?: string;
+
+  @IsOptional()
+  @IsString()
+  fissCertificateUrl?: string;
 }
 

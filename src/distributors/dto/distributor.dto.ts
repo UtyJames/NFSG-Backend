@@ -1,4 +1,4 @@
-import { IsEmail, IsString, Matches } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Matches } from 'class-validator';
 
 export class RegisterDistributorDto {
   @IsString()
@@ -25,4 +25,12 @@ export class RegisterDistributorDto {
 
   @IsString()
   rcNumber: string;
+
+  @IsOptional()
+  @IsString()
+  naidaCertificateKey?: string;
+
+  @IsOptional()
+  @IsString()
+  naidaCertificateUrl?: string;
 }
