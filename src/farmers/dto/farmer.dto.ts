@@ -8,28 +8,28 @@ export class RegisterFarmerDto {
   @IsString()
   fullName: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   gender?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   dateOfBirth?: string;
 
   @IsString()
   @Matches(/^0\d{10}$/, { message: 'Phone must be 11-digit Nigerian number starting with 0' })
   phoneNumber: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   email?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   idType?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   idNumber?: string;
 
   @IsString()
@@ -47,79 +47,79 @@ export class RegisterFarmerDto {
   @IsString()
   farmSize: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   groupLeaderName?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   leaderPhoneNumber?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   farmersAssociation?: string;
 }
 
 export class UpdateFarmerDto {
-  @IsString()
   @IsOptional()
+  @IsString()
   fullName?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   gender?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   dateOfBirth?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   @Matches(/^0\d{10}$/, { message: 'Phone must be 11-digit Nigerian number starting with 0' })
   phoneNumber?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   email?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   idType?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   idNumber?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   state?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   lga?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   ward?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   commodity?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   farmSize?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   groupLeaderName?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   leaderPhoneNumber?: string;
 
-  @IsString()
   @IsOptional()
+  @IsString()
   farmersAssociation?: string;
 }
 
